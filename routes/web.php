@@ -3,6 +3,7 @@
 use Illuminate\Foundation\Application;
 use Illuminate\Support\Facades\Route;
 use Inertia\Inertia;
+use App\Http\Controllers\UserFileController;
 
 /*
 |--------------------------------------------------------------------------
@@ -15,19 +16,27 @@ use Inertia\Inertia;
 |
 */
 
+//Route::get('/', function () {
+//    return Inertia::render('Welcome', [
+//        'laravelVersion' => Application::VERSION,
+//        'phpVersion' => PHP_VERSION,
+//    ]);
+//});
+
 Route::get('/', function () {
-    return Inertia::render('Welcome', [
-        'laravelVersion' => Application::VERSION,
-        'phpVersion' => PHP_VERSION,
+    return Inertia::render('FileList', [
+        'fileList' => [],
+        'pageNumber' => 1,
+        'totalNumberOfPages' => 1
     ]);
 });
 
-Route::middleware([
-    'auth:sanctum',
-    config('jetstream.auth_session'),
-    'verified',
-])->group(function () {
-    Route::get('/dashboard', function () {
-        return Inertia::render('Dashboard');
-    })->name('dashboard');
-});
+Route::prefix('/api')
+    ->controller(UserFileController::class)
+    ->group(function () {
+        Route::get('/list', 'list');
+        Route::post('/upload', 'upload');
+        Route::post('/update/{slug}', 'update');
+        Route::delete('/delete/{slug}', 'delete');
+    });
+
