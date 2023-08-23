@@ -1,6 +1,4 @@
-export function formatDownloadLink(id) {
-    return `/storage/app/public/${id}`
+export function formatFileSize(size) {
+    return Math.round(10*size / (1024*1024)) / 10
 }
-export function formatEditLink(id) {
-    return `/edit/${id}`
-}
+

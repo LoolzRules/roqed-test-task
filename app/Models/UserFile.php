@@ -4,9 +4,9 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Model;
 use Eloquent;
+use Imagick;
 use October\Rain\Database\Builder;
 use Illuminate\Http\UploadedFile;
-use Illuminate\Support\Facades\File;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Str;
 
@@ -26,17 +26,38 @@ use Illuminate\Support\Str;
  *
  * Computed attributes
  * @property bool        $has_preview
- * @property File        $file
+ * @property string      $file_link
+ * @property string      $preview_link
  */
 class UserFile extends Model
 {
     protected $table = 'user_files';
 
-    protected $visible = ['slug', 'title', 'path', 'extension', 'preview_path'];
+    protected $visible = ['size', 'slug', 'title', 'extension'];
 
     public function getHasPreviewAttribute(): string
     {
         return in_array($this->extension, ['jpg', 'jpeg', 'png', 'gif']);
+    }
+
+    public function getFileLinkAttribute(): string
+    {
+        return Storage::url($this->path);
+    }
+
+    public function getPreviewLinkAttribute(): string|null
+    {
+        return isset($this->preview_path)
+            ? Storage::url($this->preview_path)
+            : null;
+    }
+
+    public function toArray()
+    {
+        $array = parent::toArray();
+        $array['file_link'] = $this->file_link;
+        $array['preview_link'] = $this->preview_link;
+        return $array;
     }
 
     public static function uploadFile(UploadedFile $file, string|null $file_name = null): UserFile
@@ -49,27 +70,30 @@ class UserFile extends Model
         $file_model->extension    = $file->getClientOriginalExtension();
         $file_model->size         = $file->getSize();
         $file_model->path         = $file_model->storeFileOnDisk($file);
-        $file_model->preview_path = $file_model->storePreviewOnDisk($file);
+        $file_model->preview_path = $file_model->storePreviewOnDisk();
         $file_model->save();
 
         return $file_model;
     }
 
-    public function updateFile(UploadedFile $file, string|null $file_name = null)
+    public function updateFile(UploadedFile|null $file, string|null $file_name = null)
     {
-        $this->deleteFileFromDisk();
-
         $this->title        = $file_name ?? $this->title;
-        $this->extension    = $file->getClientOriginalExtension();
-        $this->size         = $file->getSize();
-        $this->path         = $this->storeFileOnDisk($file);
-        $this->preview_path = $this->storePreviewOnDisk($file);
+
+        if ($file) {
+            $this->deleteFilesFromDisk();
+            $this->extension    = $file->getClientOriginalExtension();
+            $this->size         = $file->getSize();
+            $this->path         = $this->storeFileOnDisk($file);
+            $this->preview_path = $this->storePreviewOnDisk();
+        }
+
         $this->save();
     }
 
     public function deleteFile()
     {
-        $this->deleteFileFromDisk();
+        $this->deleteFilesFromDisk();
         return $this->delete();
     }
 
@@ -79,25 +103,39 @@ class UserFile extends Model
         return $path ?: null;
     }
 
-    private function storePreviewOnDisk(UploadedFile $file): string|null
+    private function storePreviewOnDisk(): string|null
     {
         if ($this->has_preview) {
-            $path = $file->storeAs('public/previews', $this->slug);
-            return $path ?: null;
+            $path_to_read = Storage::path($this->path);
+            $path_to_write = preg_replace('/\/uploads\//', '/previews/', $path_to_read);
+
+            try {
+                $thumb = new Imagick($path_to_read);
+                $thumb->setImageFormat('jpg');
+                $thumb->setImageCompressionQuality(85);
+
+                $thumb->scaleImage(100,100,true);
+    //            $thumb->resizeImage(100,100,Imagick::FILTER_CUBIC,1);
+
+                $thumb->writeImage($path_to_write);
+                $thumb->destroy();
+                $path = substr($path_to_write, strlen(Storage::path('')));
+            } catch (\ImagickException $e) {
+                $path = null;
+            }
+
+            return $path;
         }
         return null;
     }
 
-    private function deleteFileFromDisk(): void
+    private function deleteFilesFromDisk(): void
     {
-        Storage::delete($this->path);
-        if ($this->has_preview) {
+        if (Storage::exists($this->path)) {
+            Storage::delete($this->path);
+        }
+        if ($this->has_preview && $this->preview_path && Storage::exists($this->preview_path)) {
             Storage::delete($this->preview_path);
         }
-    }
-
-    public function getFileAttribute()
-    {
-
     }
 }

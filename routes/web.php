@@ -1,10 +1,7 @@
 <?php
 
-use Illuminate\Foundation\Application;
 use Illuminate\Support\Facades\Route;
-use Inertia\Inertia;
-use App\Http\Controllers\UserFileController;
-
+use App\Http\Controllers\MainController;
 /*
 |--------------------------------------------------------------------------
 | Web Routes
@@ -16,27 +13,17 @@ use App\Http\Controllers\UserFileController;
 |
 */
 
-//Route::get('/', function () {
-//    return Inertia::render('Welcome', [
-//        'laravelVersion' => Application::VERSION,
-//        'phpVersion' => PHP_VERSION,
-//    ]);
-//});
+Route::get(
+    '/',
+    [MainController::class, 'list']
+)->name('app.main');
 
-Route::get('/', function () {
-    return Inertia::render('FileList', [
-        'fileList' => [],
-        'pageNumber' => 1,
-        'totalNumberOfPages' => 1
-    ]);
-});
+Route::get(
+    '/upload',
+    [MainController::class, 'upload']
+)->name('app.upload');
 
-Route::prefix('/api')
-    ->controller(UserFileController::class)
-    ->group(function () {
-        Route::get('/list', 'list');
-        Route::post('/upload', 'upload');
-        Route::post('/update/{slug}', 'update');
-        Route::delete('/delete/{slug}', 'delete');
-    });
-
+Route::get(
+    '/edit/{slug}',
+    [MainController::class, 'edit']
+)->name('app.edit');

@@ -12,6 +12,7 @@ services:
             - '${APP_PORT:-80}:80'
             - '${VITE_PORT:-5173}:${VITE_PORT:-5173}'
         environment:
+            APP_NAME: 'ROQED Test'
             WWWUSER: '${WWWUSER:-1000}'
             WWWGROUP: '${WWWGROUP:-$(id -g)}'
             LARAVEL_SAIL: 1
