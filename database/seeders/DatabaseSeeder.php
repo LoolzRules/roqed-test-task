@@ -3,7 +3,9 @@
 namespace Database\Seeders;
 
 // use Illuminate\Database\Console\Seeds\WithoutModelEvents;
+use App\Services\UserFileService;
 use Illuminate\Database\Seeder;
+use Illuminate\Http\UploadedFile;
 
 class DatabaseSeeder extends Seeder
 {
@@ -12,11 +14,15 @@ class DatabaseSeeder extends Seeder
      */
     public function run(): void
     {
-        // \App\Models\User::factory(10)->create();
+        $max = 127;
+        for ($idx=0; $idx<$max; $idx++) {
+            $file_name = fake()->regexify('[A-Za-z]{24}');
+            $is_text_file = random_int(0, 1);
+            $uploaded_file = $is_text_file
+                ? UploadedFile::fake()->createWithContent("{$file_name}.txt", fake()->realText(128))
+                : UploadedFile::fake()->image("{$file_name}.jpg");
 
-        // \App\Models\User::factory()->create([
-        //     'name' => 'Test User',
-        //     'email' => 'test@example.com',
-        // ]);
+            UserFileService::uploadFile($uploaded_file);
+        }
     }
 }

@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use App\Models\UserFile;
+use App\Services\UserFileService;
 
 
 class ApiController extends Controller
@@ -24,7 +25,7 @@ class ApiController extends Controller
         $file = $validated_data['file'];
         $file_name = $validated_data['filename'] ?? null;
 
-        $uploadedFile = UserFile::uploadFile($file, $file_name);
+        $uploadedFile = UserFileService::uploadFile($file, $file_name);
         return response()->json(['message' => 'ok', 'slug' => $uploadedFile->slug]);
     }
 
@@ -54,7 +55,7 @@ class ApiController extends Controller
         $new_file = $validated_data['file'] ?? null;
         $new_title = $validated_data['filename'] ?? null;
 
-        $file->updateFile($new_file, $new_title);
+        UserFileService::updateFile($file, $new_file, $new_title);
         return response()->json(['message' => 'ok']);
     }
 
@@ -66,7 +67,7 @@ class ApiController extends Controller
             return response()->json(['message' => 'Record not found'], 404);
         }
 
-        $file->deleteFile();
+        UserFileService::deleteFile($file);
         return response()->json(['message' => 'ok']);
     }
 }

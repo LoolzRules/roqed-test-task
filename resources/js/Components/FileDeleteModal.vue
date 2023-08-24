@@ -1,23 +1,31 @@
 <script setup>
 import Modal from "@/Components/Modal.vue"
 import {ref} from "vue";
+import ErrorMessage from "@/Components/ErrorMessage.vue";
 
 const props = defineProps({
-    slug: String,
     show: Boolean,
+    slug: String,
 })
-defineEmits(['close'])
+const emit = defineEmits(['close'])
 
 const loading = ref(false)
 const loadingError = ref('')
+
+function close() {
+    if (!loading.value) {
+        emit('close')
+    }
+}
 async function deleteFile() {
     loading.value = true
     loadingError.value = ''
 
     try {
-        const response = axios.delete(route('api.delete', { slug: props.slug }))
+        const response = await axios.delete(route('api.delete', { slug: props.slug }))
         if (response.data.message === 'ok') {
             window.location.href = route('app.main')
+            return
         }
         loadingError.value = response.data.message
     } catch (error) {
@@ -29,7 +37,7 @@ async function deleteFile() {
 </script>
 
 <template>
-    <Modal :show="show" @close="$emit('close')">
+    <Modal :show="show" @close="close">
         <form
             @submit.prevent="deleteFile"
             class="flex flex-col p-4">
@@ -42,10 +50,10 @@ async function deleteFile() {
                 <button
                     type="button"
                     :disabled="loading"
-                    @click="$emit('close')"
+                    @click="close"
                     class="w-full ml-2 custom-button info">Cancel</button>
             </div>
-            <span v-if="loadingError" class="text-md text-red-500 mt-3 text-center uppercase">{{ loadingError }}</span>
+            <ErrorMessage :message="loadingError" class="mt-3 text-center"/>
         </form>
     </Modal>
 </template>

@@ -1,11 +1,18 @@
 <script setup>
 import { onMounted, ref } from 'vue';
+import ErrorMessage from "@/Components/ErrorMessage.vue";
 
 defineProps({
     label: String,
     modelValue: String,
-    errors: Array,
-    required: Boolean,
+    errors: {
+        type: Array,
+        default: []
+    },
+    required: {
+        type: Boolean,
+        default: false
+    }
 });
 
 defineEmits(['update:modelValue']);
@@ -36,6 +43,6 @@ defineExpose({ focus: () => input.value.focus() });
                 @input="$emit('update:modelValue', $event.target.value)"
             >
         </label>
-        <span v-if="errors" class="text-sm text-red-500 mt-1">{{ errors.join(', ') }}</span>
+        <ErrorMessage :message="errors?.join(', ')" class="mt-1"/>
     </div>
 </template>

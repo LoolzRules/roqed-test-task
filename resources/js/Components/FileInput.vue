@@ -1,13 +1,20 @@
 <script setup>
 import {onMounted, onUnmounted, ref} from 'vue'
 import Modal from "@/Components/Modal.vue";
+import ErrorMessage from "@/Components/ErrorMessage.vue";
 
 defineProps({
     label: String,
-    modelValue: File,
-    errors: Array,
     name: String,
-    required: Boolean
+    modelValue: File,
+    errors: {
+        type: Array,
+        default: []
+    },
+    required: {
+        type: Boolean,
+        default: false
+    }
 })
 
 const emit = defineEmits(['update:modelValue'])
@@ -77,7 +84,7 @@ onUnmounted(() => {
                 Remove
             </button>
         </div>
-        <span v-if="errors" class="text-sm text-red-500 mt-1">{{ errors.join(', ') }}</span>
+        <ErrorMessage :message="errors?.join(', ')" class="mt-1"/>
 
         <Modal :show="isDragging" @close="isDragging = false">
             <div

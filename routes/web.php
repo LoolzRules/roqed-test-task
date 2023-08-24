@@ -13,17 +13,14 @@ use App\Http\Controllers\MainController;
 |
 */
 
-Route::get(
-    '/',
-    [MainController::class, 'list']
-)->name('app.main');
+Route::controller(MainController::class)
+    ->group(function () {
+        Route::get('/', 'list')
+            ->name('app.main');
 
-Route::get(
-    '/upload',
-    [MainController::class, 'upload']
-)->name('app.upload');
+        Route::get('/upload', 'upload')
+            ->name('app.upload');
 
-Route::get(
-    '/edit/{slug}',
-    [MainController::class, 'edit']
-)->name('app.edit');
+        Route::get('/edit/{slug}', 'edit')
+            ->name('app.edit');
+    });

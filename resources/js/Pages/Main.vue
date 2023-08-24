@@ -17,5 +17,7 @@ const props = defineProps({
         <Pagination :pagination="pagination"/>
 
         <FileList :data="pagination.data"/>
+
+        <Pagination :pagination="pagination"/>
     </AppLayout>
 </template>

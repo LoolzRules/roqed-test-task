@@ -20,6 +20,9 @@ return new class extends Migration
             $table->string('path');
             $table->string('preview_path')->nullable();
             $table->timestamps();
+
+            $table->index(['slug']);
+            $table->index(['title']);
         });
     }
 

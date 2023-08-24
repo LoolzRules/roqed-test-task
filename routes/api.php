@@ -16,8 +16,12 @@ use App\Http\Controllers\ApiController;
 
 Route::controller(ApiController::class)
     ->group(function () {
-        Route::get('/list', 'list');
-        Route::post('/upload', 'upload')->name('api.upload');
-        Route::post('/update/{slug}', 'update')->name('api.update');
-        Route::delete('/delete/{slug}', 'delete')->name('api.delete');
+        Route::post('/upload', 'upload')
+            ->name('api.upload');
+
+        Route::post('/update/{slug}', 'update')
+            ->name('api.update');
+
+        Route::delete('/delete/{slug}', 'delete')
+            ->name('api.delete');
     });

@@ -1,9 +1,9 @@
 <script setup>
 import TextInput from "@/Components/TextInput.vue";
 import FileInput from "@/Components/FileInput.vue";
-import {computed, ref} from "vue";
+import {ref} from "vue";
 import FileDeleteModal from "@/Components/FileDeleteModal.vue";
-import ProgressBar from "@/Components/ProgressBar.vue";
+import FileSaveModal from "@/Components/FileSaveModal.vue";
 
 const props = defineProps({
     existingFile: Object
@@ -14,25 +14,34 @@ const filename = ref(props.existingFile?.title ?? '')
 const loading = ref(false)
 const loadingError = ref('')
 const errors = ref({})
-const uploadProgress = ref(0)
+const formData = ref(null)
 
-const submitParams = computed(() => {
-    return !props.existingFile
-        ? ['api.upload']
-        : ['api.update', { slug: props.existingFile.slug }]
-})
+
+const showSaveModal = ref(false)
+function closeSaveModal(errs) {
+    if (errs) {
+        errors.value = errs
+    }
+    showSaveModal.value = false
+}
 
 const showDeleteModal = ref(false)
+function closeDeleteModal() {
+    showDeleteModal.value = false
+}
+
+
 const validate = {
     filename() {
         if (filename.value && filename.value.length > 127) {
-            errors.value.file = ['File name is too long.']
+            errors.value.filename = ['File name is too long.']
             return
         }
 
-        errors.value.file = ''
+        delete errors.value.filename
     },
     file() {
+        console.log(file.value, props.existingFile)
         if (!file.value && !props.existingFile) {
             errors.value.file = ['File is required.']
             return
@@ -42,7 +51,7 @@ const validate = {
             return
         }
 
-        errors.value.file = ''
+        delete errors.value.file
     }
 }
 
@@ -66,42 +75,20 @@ async function postData() {
         if (errors.value[key]) return
     }
 
+    if (!file.value && !filename.value) {
+        loadingError.value = 'Nothing to upload'
+        return
+    }
 
-    loading.value = true
-    const formData = new FormData()
+    formData.value = new FormData()
     if (file.value) {
-        formData.append('file', file.value)
+        formData.value.append('file', file.value)
     }
-    formData.append('filename', filename.value)
-
-    try {
-        const response = await axios.post(route(...submitParams.value), formData, {
-            headers: { 'Content-Type': 'multipart/form-data' },
-            onUploadProgress: progressEvent => {
-                uploadProgress.value = Math.round((progressEvent.loaded / progressEvent.total) * 100)
-            },
-        })
-
-        if (response.data.message !== 'ok') {
-            loadingError.value = response.data.message
-            return
-        }
-
-        if (props.existingFile) {
-            window.location.reload()
-        } else {
-            window.location.href = route('app.edit', { slug: response.data.slug })
-        }
-    } catch (error) {
-        if (error?.response?.data?.errors) {
-            errors.value = error.response.data.errors
-        } else {
-            loadingError.value = 'Upload error.'
-        }
+    if (filename.value) {
+        formData.value.append('filename', filename.value)
     }
 
-    loading.value = false
-    uploadProgress.value = 0
+    showSaveModal.value = true
 }
 </script>
 
@@ -139,18 +126,18 @@ async function postData() {
                 class="w-full custom-button positive">Save</button>
         </div>
 
-        <ProgressBar v-if="uploadProgress" :value="uploadProgress" class="mt-3"/>
+        <span v-if="loadingError" class="text-md text-red-500 mt-3 text-center">{{ loadingError }}</span>
 
-        <span v-else-if="loadingError" class="text-md text-red-500 mt-3 text-center uppercase">{{ loadingError }}</span>
+        <FileSaveModal
+            :show="showSaveModal"
+            :slug="existingFile?.slug"
+            :form-data="formData"
+            @close="closeSaveModal"/>
 
         <FileDeleteModal
             v-if="existingFile"
-            :slug="existingFile.slug"
             :show="showDeleteModal"
-            @close="() => showDeleteModal = false"/>
+            :slug="existingFile.slug"
+            @close="closeDeleteModal"/>
     </form>
 </template>
-
-<style scoped>
-
-</style>

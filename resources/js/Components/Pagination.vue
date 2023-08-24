@@ -12,13 +12,12 @@ const linksToDisplay = computed(() => {
 
 <template>
     <div class="flex justify-between align-items-center font-bold py-2">
-        <span class="self-center text-sm mr-4">{{ pagination.data.length }} records of {{ pagination.total }}</span>
-        <ul v-if="linksToDisplay.length > 1" class="border">
+        <span class="self-center text-sm mr-4">Records {{ pagination.from }}-{{ pagination.to }} of total {{ pagination.total }}</span>
+        <ul v-if="linksToDisplay.length > 1" class="border rounded-md">
             <li v-for="(link, idx) of linksToDisplay" :key="idx"
-                  class="border inline-block text-sm px-3 py-2"
-                  :class="{ 'text-gray-400': link.active }">
-                <template v-if="link.active">{{ link.label }}</template>
-                <a v-else :href="link.url">{{ link.label }}</a>
+                class="border inline-flex text-sm">
+                <span v-if="link.active" class="text-gray-400 bg-blue-100 px-3 py-2">{{ link.label }}</span>
+                <a v-else :href="link.url" class="px-3 py-2">{{ link.label }}</a>
             </li>
         </ul>
     </div>
